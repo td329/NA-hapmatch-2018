@@ -217,7 +217,7 @@ if __name__ == "__main__":
 
     for j in range(1, NUM_ITERATIONS):
         test = T.copy()
-        for pop in ['Surui', 'Pima']:
+        for pop in ['Surui', 'Pimapytho']:
             for hap in [1, 2, 3, 4]:
                 observations = extract_random_sample(hap, pop)
                 # r = random.choice([1800])
