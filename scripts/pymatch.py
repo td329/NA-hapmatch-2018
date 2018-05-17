@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 from __future__ import division
+
 from collections import namedtuple
 import argparse
 import gzip
@@ -10,12 +11,13 @@ import sys
 import csv
 
 
-# ============================================================================================
+# ===========================================================
 
 END_OF_CHR = 249250621
 OVERLAP_SKIP = 5e5
 
-# ============================================================================================
+# ===========================================================
+
 
 SequenceSegments = namedtuple('SequenceSegments', ['modern', 'ancient_1', 'ancient_2', 'ancestral'])
 
@@ -119,7 +121,7 @@ def get_segment_scores(seqs, positions):
             yield (pos[0], pos[1]), seg_score
 
 
-# ============================================================================================
+# ===========================================================
 
 
 p = argparse.ArgumentParser()
@@ -129,7 +131,7 @@ p.add_argument('-s', '--sequences', help='sequences combined in sites file')
 args = p.parse_args()
 
 
-# ============================================================================================
+# ===========================================================
 
 
 if __name__ == "__main__":
@@ -162,13 +164,4 @@ if __name__ == "__main__":
                             w = csv.writer(out, delimiter='\t')
                             w.writerow([sc[0]] + sc[1])
 
-# ============================================================================================
-
-    # arg_file = "/home/td329/projects/NA/S_Pima-1-2_chr1/148000001-153000000_S_Pima-1-2_chr1_all-phased/out.4000.smc.gz"
-    # if not os.path.isfile(arg_file):
-    #     sys.exit('File does not exist')
-    # for sc in get_segment_scores(args.sequences, get_positions(arg_file)):
-    #     if sc[1] == ['.']*4:
-    #         continue
-    #     else:
-    #         print(sc[0], *sc[1], sep='\t')
+# ===========================================================

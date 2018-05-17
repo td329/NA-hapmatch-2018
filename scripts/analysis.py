@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from __future__ import division
 from __future__ import print_function
 
@@ -7,7 +9,6 @@ import seaborn as sns
 import pandas as pd
 import math
 import random
-import sys
 import scipy
 
 # ===========================================================
@@ -16,18 +17,18 @@ exp, log, beta_ln = np.exp, np.log, scipy.special.betaln
 
 # ===========================================================
 
-NUM_ITERATIONS = 20
-RES = 20
-GEN_TIME = 25
-MERGE = 15000/GEN_TIME
-J1_START = 12600/GEN_TIME      # Anzick
-J2_START = 4630/GEN_TIME      # NorthEast
-MAX_LENGTH = 200000
-BINS = 30
+NUM_ITERATIONS = 60         # Num of random samples drawn
+RES = 20                    # Num blocks in heat map
+GEN_TIME = 25               # Generations in years
+MERGE = 15000/GEN_TIME      # Global merge time
+J1_START = 12600/GEN_TIME   # Anzick
+J2_START = 4630/GEN_TIME    # NorthEast
+MAX_LENGTH = 200000         # Exclude the few very long segments
+BINS = 30                   # Num bins
 IND = None
 PI = math.pi
-ALPHA = 10
-USE_BETA = False
+ALPHA = 10                  # Parameter in beta distribution
+USE_BETA = True             # Uses binomial if False
 
 MODEL_ARGS = {'Ne': 1e4,
               'merge': MERGE,
@@ -35,11 +36,21 @@ MODEL_ARGS = {'Ne': 1e4,
               'scale_2': 1.5,
               'mu': 1.2e-8}
 
-
 # ===========================================================
 
 
 def extract_random_sample(ind, pop, show_data=False):
+    """Method for importing pymatch output
+        - MCMC iterate randomly chosen
+        - Data extracted and binned by length using segment_data()
+
+    :param ind: choice of haplotype (1,2,3, or 4)
+    :param pop: "Pima" or "Surui"
+    :param show_data: if True displays data for testing purposes
+    :return: data subdivided into bins by length
+    :rtype: dict
+
+    """
     data = []
     sample = random.choice(range(2000, 4010, 10))
 
@@ -64,6 +75,14 @@ def extract_random_sample(ind, pop, show_data=False):
 
 
 def segment_data(data):
+    """ Bins list of segment-score tuples by length. Representative length
+    chosen to be midpoint of binning interval.
+
+    :param data: list of (length, score) segment tuples
+    :return: segment scores binned by length
+    :rtype: dict
+
+    """
     bins = list(np.linspace(100, MAX_LENGTH, BINS))
     data = sorted(data, key=lambda entry: entry[0])
     d_it = iter(data)
@@ -94,7 +113,21 @@ def segment_data(data):
     return out
 
 
+# ===========================================================
+
+
 def compare_theoretical_pop_matches(args=MODEL_ARGS, j1=None, j2=None, l=None, pop=None):
+    """Determines segment matching probabilities given model params
+
+    :param args: dict of shared model params
+    :param j1: join time population 1
+    :param j2: join time population 2
+    :param l: length of segment (given by data key)
+    :param pop: "Pima" or "Surui"
+    :return: probability of segment matching
+    :rtype: float
+
+    """
     if j1:
         args['join_1'] = j1
     if j2:
@@ -136,10 +169,19 @@ def compare_theoretical_pop_matches(args=MODEL_ARGS, j1=None, j2=None, l=None, p
         I += A[i] * (exp((1 + 1 / lmb[i]) * t[i]) - 1) * (exp(-(1 + theta / 2) * t[i])) / d2
         I += B / (3 * d2)
         out.append(1 - I)
+
     return out[0]/(out[0] + out[1])
 
 
+# ===========================================================
+
+
 def log_stirling(n, k):
+    """
+    :return: log stirling approximation of "n choose k"
+    :rtype: float
+
+    """
     if k == n or k == 0:
         lgs = 0
     else:
@@ -150,12 +192,24 @@ def log_stirling(n, k):
 
 
 def binomial_log_likelihood(p, val):
+    """
+    :param val: tuple (k,j) of observed matches with both populations
+    :return: binomial log likelihood of observing val given binomial parameter p
+    :rtype: float
+
+    """
     k = val[0]
     n = val[0] + val[1]
     return log_stirling(n, k) + k * log(p) + (n - k) * log(1 - p)
 
 
 def beta_log_likelihood(p, val):
+    """
+    :param val: tuple (k,j) of observed matches with both populations
+    :return: beta log likelihood of val given parameter p and global ALPHA
+    :rtype: float
+
+    """
     k = val[0]
     n = val[0] + val[1]
 
@@ -166,11 +220,23 @@ def beta_log_likelihood(p, val):
 
 
 def int_round(vls):
+    """
+    :param vls: list of ints to be rounded down
+    :return: rounded down list of ints
+    """
     vls = list(vls)
     return [int(round(v)) for v in vls]
 
 
 def update(T, obs, pop):
+    """Update heatmap data for each randomly chosen sample
+
+    :param T: pd.DataFrame consisting of
+    :param obs:
+    :param pop:
+    :return:
+    :rtype: pd.DataFrame
+    """
     j1_vls = np.linspace(J1_START, MERGE, RES)
     j2_vls = np.linspace(J2_START, MERGE, RES)
 
@@ -193,7 +259,15 @@ def update(T, obs, pop):
     return T
 
 
+# ===========================================================
+
+
 def plot_heatmap(T):
+    """
+    :param T: pf.DataFrame for plotting
+    :return: None
+
+    """
     j1_vls = np.linspace(J1_START, MERGE, RES)
     j2_vls = np.linspace(J2_START, MERGE, RES)
 
@@ -207,7 +281,7 @@ def plot_heatmap(T):
     plt.show()
 
 
-# ==================================================================
+# ===========================================================
 
 
 if __name__ == "__main__":
@@ -217,18 +291,15 @@ if __name__ == "__main__":
 
     for j in range(1, NUM_ITERATIONS):
         test = T.copy()
-        for pop in ['Surui', 'Pimapytho']:
+        for pop in ['Surui', 'Pima']:
             for hap in [1, 2, 3, 4]:
                 observations = extract_random_sample(hap, pop)
-                # r = random.choice([1800])
-                # observations = {2500: (200, 200), 3000: (180, 180), 4000: (150, 150)}
-                # print(observations)
                 T = update(T, observations, pop)
         if j > 1:
             df = abs(test/(j-1) - T/j)
             dfs.append(np.sum(df)/(RES**2))
 
-        if j % 5 == 0:
+        if j % 10 == 0:
             print('Iterate {}/{} completed'.format(j, NUM_ITERATIONS))
 
     T /= NUM_ITERATIONS
@@ -241,6 +312,5 @@ if __name__ == "__main__":
     plt.show()
 
     plot_heatmap(T)
-
 
     # =========================================================
