@@ -10,7 +10,6 @@ import sys
 import argparse
 import gzip
 
-
 # ===========================================================
 
 END_OF_CHR = 249250621

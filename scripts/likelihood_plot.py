@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Likelihood surface plot under model described in method.pdf
+# Likelihood surface plot using model described in method.pdf
 #
 # ===========================================================
 
@@ -14,7 +14,6 @@ import pandas as pd
 import math
 import random
 import scipy
-
 
 # ===========================================================
 

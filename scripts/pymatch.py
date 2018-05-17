@@ -9,7 +9,6 @@
 from __future__ import print_function
 from __future__ import division
 
-# from collections import namedtuple
 import argparse
 import gzip
 import os
@@ -198,4 +197,4 @@ if __name__ == "__main__":
                             w.writerow([sc[0]] + sc[1])
 
 
-# =========================================================== 
+# ===========================================================
