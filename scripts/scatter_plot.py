@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+#
+# Scatter plot for comparison of relative levels of segment
+# matching in Pima and Surui
+#
+# ===========================================================
+
 from __future__ import division
 from __future__ import print_function
 
@@ -7,8 +14,10 @@ import numpy as np
 import itertools
 
 
-for pop, ID in itertools.product(['Pima', 'Surui'], [1,2,3,4]):
-#for pop, ID in itertools.product(['Pima'], [1]):
+# ===========================================================
+
+
+for pop, ID in itertools.product(['Pima', 'Surui'], [1, 2, 3, 4]):
     print(pop, ID)
     scores = {}
     lengths = {}
@@ -29,6 +38,7 @@ for pop, ID in itertools.product(['Pima', 'Surui'], [1,2,3,4]):
 
     anzick = []
     CK = []
+
     for k in scores:
         anzick.append(len(filter(lambda x: x > 0, scores[k])))
         CK.append(len(filter(lambda x: x < 0, scores[k])))
@@ -54,21 +64,5 @@ plt.xlabel('Anzick-1 chr1 segment matches')
 plt.ylabel('CK-13 chr1 segment matches')
 plt.show()
 
-# Pa = [5648, 5799, 5712, 5856]
-# Pc = [4226, 4122, 4132, 4060]
-#
-# Sa = [5573, 5438, 5832, 5774]
-# Sc = [3935, 4034, 4130, 4067]
-#
-# plt.scatter(Pa, Pc, color='r')
-# plt.scatter(Sa, Sc, color='b')
-#
-# plt.show()
-# 5799 4122
-# 5712 4132
-# 5856 4060
-#
-# 5573 3935
-# 5438 4034
-# 5832 4130
-# 5774 4067
+
+# ===========================================================

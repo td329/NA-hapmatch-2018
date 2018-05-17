@@ -1,34 +1,46 @@
 #!/usr/bin/env python
+#
+# Main segment matching script
+# Requires all variant data processed in extract_sites.py
+# Requires argweaver output
+#
+# ===========================================================
 
 from __future__ import print_function
 from __future__ import division
 
-from collections import namedtuple
+# from collections import namedtuple
 import argparse
 import gzip
 import os
 import sys
 import csv
 
-
 # ===========================================================
 
 END_OF_CHR = 249250621
-OVERLAP_SKIP = 5e5
+OVERLAP = 5e5          # Assumed argweaver was run on 5Mb windows with overlap length OVERLAP
 
 # ===========================================================
 
 
-SequenceSegments = namedtuple('SequenceSegments', ['modern', 'ancient_1', 'ancient_2', 'ancestral'])
-
-
 def get_positions(filename):
+    """
+    Opens argweaver output files *smc.gz
+    Extracts positions of haplotype segment breakpoints
+
+    :param filename: *smc.gz argweaver output file
+    :return: list of (start, end) tuples
+    :rtype: list
+
+    """
     positions = []   # few enough rows that this won't cause memory issues
     with gzip.open(filename, 'r') as f:
+
         f.next()
         regions = f.next().split('\t')
-        lower = int(regions[2]) + OVERLAP_SKIP
-        upper = int(regions[3]) - OVERLAP_SKIP
+        lower = int(regions[2]) + OVERLAP
+        upper = int(regions[3]) - OVERLAP
 
         for line in f:
 
@@ -47,6 +59,14 @@ def get_positions(filename):
 
 
 def test_pos(l):
+    """
+    Checks for shared private derived alleles at position l[0]
+
+    :param l: line in seqs file
+    :return: list of scores for each modern hap allele
+    :rtype: list
+
+    """
     scores = [0]*4
 
     bases = ['A', 'C', 'T', 'G']
@@ -76,9 +96,21 @@ def test_pos(l):
 
 
 def get_segment_scores(seqs, positions):
-    # Input sites file has format:
-    #    > POS    PIMA-1_0    PIMA-1_1    PIMA-2_0    PIMA-2_1    REFERENCE    ANCESTRAL    ANZICK    RM-83
-    #    852875	C	T	C	T	C	C	C	T
+    """
+    Counts private derived alleles shared by each modern segment with at most one of the ancient haps
+
+    Input sites file ("seqs") has format:
+        > POS    PIMA-1_0    PIMA-1_1    PIMA-2_0    PIMA-2_1    REFERENCE    ANCESTRAL    ANZICK    CK-13
+        852875	C	T	C	T	C	C	C	T
+        ...
+        ...
+
+    :param seqs: name of input site file
+    :param positions: tuple of start and end position of segments obtained from argweaver
+    :return: position and list of (2) scores
+    :rtype: (positions, scores)
+
+    """
 
     with open(seqs) as s:
         s_it = iter(s)
@@ -99,7 +131,7 @@ def get_segment_scores(seqs, positions):
             while int(line[0]) <= pos[1]:
                 test = test_pos(line)
                 if test is not None:
-                    for i, t in enumerate(test):    # use zip instead
+                    for i, t in enumerate(test):
                         keep[i].append(t)
                 try:
                     line = s_it.next().rstrip().split('\t')
@@ -141,16 +173,17 @@ if __name__ == "__main__":
     if args.filename and args.lfn:
         sys.exit('Supply only one of filename and lofn')
 
-    if not os.path.exists('Pima_anzick_CK-13.out'):
-        os.makedirs('Pima_anzick_CK-13.out')
+    if not os.path.exists('{p}_anzick_CK-13.out'.format(p=POP)):
+        os.makedirs('{p}_anzick_CK-13.out'.format(p=POP))
 
     for sample in range(2000, 4010, 10):
-        out_name = "Pima_anzick_CK-13.out/Pima_anzick_CK-13.out.{}.txt".format(sample)
+        out_name = "{p}_anzick_CK-13.out/{p}_anzick_CK-13.out.{s}.txt".format(p=POP, s=sample)
         print(out_name)
 
         with open(args.lfn) as lfn:
             for l in lfn:
-                arg_file = "/home/td329/projects/NA/S_Pima-1-2_chr1/{}/out.{}.smc.gz".format(l.rstrip(), sample)
+                arg_file = "/home/td329/projects/NA/S_{p}-1-2_chr1/{l}/out.{s}.smc.gz"\
+                    .format(p=POP, l=l.rstrip(), s=sample)
                 if not os.path.isfile(arg_file):
                     continue
 
@@ -164,4 +197,5 @@ if __name__ == "__main__":
                             w = csv.writer(out, delimiter='\t')
                             w.writerow([sc[0]] + sc[1])
 
-# ===========================================================
+
+# =========================================================== 

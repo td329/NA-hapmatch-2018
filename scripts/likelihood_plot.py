@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+#
+# Likelihood surface plot under model described in method.pdf
+#
+# ===========================================================
 
 from __future__ import division
 from __future__ import print_function
@@ -10,6 +14,7 @@ import pandas as pd
 import math
 import random
 import scipy
+
 
 # ===========================================================
 
@@ -29,6 +34,7 @@ IND = None
 PI = math.pi
 ALPHA = 10                  # Parameter in beta distribution
 USE_BETA = True             # Uses binomial if False
+CONVERGENCE_PLOT = True     # Plots difference between random iterates if True
 
 MODEL_ARGS = {'Ne': 1e4,
               'merge': MERGE,
@@ -40,7 +46,8 @@ MODEL_ARGS = {'Ne': 1e4,
 
 
 def extract_random_sample(ind, pop, show_data=False):
-    """Method for importing pymatch output
+    """
+    Method for importing and formatting pymatch output
         - MCMC iterate randomly chosen
         - Data extracted and binned by length using segment_data()
 
@@ -75,8 +82,9 @@ def extract_random_sample(ind, pop, show_data=False):
 
 
 def segment_data(data):
-    """ Bins list of segment-score tuples by length. Representative length
-    chosen to be midpoint of binning interval.
+    """
+    Bins list of segment-score tuples by length
+    Representative length chosen to be midpoint of binning interval
 
     :param data: list of (length, score) segment tuples
     :return: segment scores binned by length
@@ -117,7 +125,9 @@ def segment_data(data):
 
 
 def compare_theoretical_pop_matches(args=MODEL_ARGS, j1=None, j2=None, l=None, pop=None):
-    """Determines segment matching probabilities given model params
+    """
+    Determines segment matching probabilities given model params
+    For derivation of probabilities, see method.pdf
 
     :param args: dict of shared model params
     :param j1: join time population 1
@@ -229,12 +239,13 @@ def int_round(vls):
 
 
 def update(T, obs, pop):
-    """Update heatmap data for each randomly chosen sample
+    """
+    Update likelihood surface for each randomly chosen sample
 
-    :param T: pd.DataFrame consisting of
+    :param T: pd.DataFrame consisting of current set of log likelihoods
     :param obs:
     :param pop:
-    :return:
+    :return: updated likelihoods
     :rtype: pd.DataFrame
     """
     j1_vls = np.linspace(J1_START, MERGE, RES)
@@ -264,7 +275,7 @@ def update(T, obs, pop):
 
 def plot_heatmap(T):
     """
-    :param T: pf.DataFrame for plotting
+    :param T: pd.DataFrame of log likelihoods for plotting
     :return: None
 
     """
@@ -289,13 +300,18 @@ if __name__ == "__main__":
     T = np.zeros((RES, RES))
     dfs = []
 
+    # For each pop and haplotype a random sample chosen
+    # That sample is used to update the sample of log likelihoods T
     for j in range(1, NUM_ITERATIONS):
         test = T.copy()
         for pop in ['Surui', 'Pima']:
             for hap in [1, 2, 3, 4]:
                 observations = extract_random_sample(hap, pop)
                 T = update(T, observations, pop)
+
         if j > 1:
+            # Store absolute point-wise difference between iterates
+            # Sum each round for convergence plot
             df = abs(test/(j-1) - T/j)
             dfs.append(np.sum(df)/(RES**2))
 
@@ -306,10 +322,11 @@ if __name__ == "__main__":
 
     print(T.max(), T.min())
 
-    plt.plot(range(2, NUM_ITERATIONS), dfs)
-    plt.xlabel('Number of iterations')
-    plt.ylabel('Average absolute difference in likelihood between iterates')
-    plt.show()
+    if CONVERGENCE_PLOT:
+        plt.plot(range(2, NUM_ITERATIONS), dfs)
+        plt.xlabel('Number of iterations')
+        plt.ylabel('Average absolute difference in likelihood between iterates')
+        plt.show()
 
     plot_heatmap(T)
 

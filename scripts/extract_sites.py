@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#
+# Helper scripts for data processing
+# Function combine_sites() collates data for use with pymatch.py
+#
+# ===========================================================
 
 from __future__ import print_function
 import sys
@@ -14,6 +19,13 @@ END_OF_CHR = 249250621
 
 
 def vcf_to_sites():
+    """
+    Helper which converts vcf via sys.stdin to sites file
+    Output to stdout
+
+    :return: None
+
+    """
     # print(">POS", "SURUI_1-0", "SURUI_1-1", "SURUI_2-0", "SURUI_2-1", sep='\t')
 
     gen = slice(-2, None)
@@ -42,6 +54,14 @@ def vcf_to_sites():
 
 
 def fa_to_sites():
+    """
+    Helper which converts fasta via sys.stdin to sites file
+    Output to stdout
+
+    :return: None
+
+    """
+
     count = 1
     for l in sys.stdin:
         if l.startswith('>1'):
@@ -56,7 +76,14 @@ def fa_to_sites():
 
 
 def fa_mask_to_bed():
-    # extracting chr1 bed mask
+    """
+    Helper which converts fasta mask via sys.stdin to bed file
+    Output to stdout
+
+    :return: None
+
+    """
+
     start, pos = 0, 0
     previous = '*'
 
@@ -82,6 +109,14 @@ def fa_mask_to_bed():
 
 
 def get_source_iterator(file):
+    """
+    For sites files yields simple line-by-line "iterator"
+    FOr vcfs, extracts alleles in format consistent with sites file
+
+    :param file: file name
+    :return: yields new line at each function call
+
+    """
     is_vcf = False
 
     if file.endswith('vcf.gz'):
@@ -111,6 +146,16 @@ def get_source_iterator(file):
 
 
 def combine_sites(args):
+    """
+    Combines sites files into single file using get_source_iterator()
+    Objective is to line up corresponding alleles in single file
+    Excludes positions when alleles fail quality filters or are missing
+    Prints to stdout
+
+    :param args: argparse object
+    :return: None
+
+    """
     mod, ref, anc, ASO, msk = map(get_source_iterator, [args.moderns, args.reference, args.ancestral, args.ASO, args.mask])
     iterators = [mod, ref, anc, ASO, msk]
     flag = {_: False for _ in iterators}
@@ -119,7 +164,7 @@ def combine_sites(args):
 
     missing_chars = ['.', '-', 'N']
 
-    i = 17000   # start of chrs missing
+    i = 17000   # start of chrs usually masked
 
     while i <= END_OF_CHR:
         filter_pass = None
@@ -160,10 +205,12 @@ def combine_sites(args):
 
         print(i, *alleles, sep='\t')
 
+
 # ===========================================================
 
 
 if __name__ == '__main__':
+
     p = argparse.ArgumentParser()
     p.add_argument('-m', '--moderns')
     p.add_argument('-r', '--reference')
@@ -177,5 +224,6 @@ if __name__ == '__main__':
 
     print('>POS', 'PIMA-1_0', 'PIMA-1_1', 'PIMA-2_0', 'PIMA-2_1', 'REFERENCE', 'ANCESTRAL', 'ANZICK', 'CK-13', sep='\t')
     combine_sites(args)
+
 
 # ===========================================================
