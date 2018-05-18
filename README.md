@@ -1,10 +1,12 @@
-## NA-hapmatch-2018
+## Haplotype segment-matching analysis in Scheib et al. (2018)
+
+This repo collects scripts and output data used to generate figures for the haplotype segment-matching analysis in Scheib et al.  (2018). It also contains an outline of the derivation of some relevant quantities required for the likelihood analysis. 
 
 ### Scripts
 
 Scripts used for haplotype segment matching in Scheib et al. (2018):
 
-- extract\_sites.py: Helper functions for the extraction and collation of relevant sequence information into a *.sites format which is used in pymatch.py
+- extract\_sites.py: Helper functions for the extraction and collation of relevant sequence information into the "*.sites" format used in pymatch.py
 - pymatch.py: Main functions for the segment scoring and matching procedure
 - scatter\_plot.py: Generating the scatter plot in publication using data provided
 - likelihood\_plot.py: Generating the likelihood heatmap used in the publication
@@ -19,4 +21,4 @@ A derivation of the segment matching probabilities is shown in method.pdf.
 
 ### Forthcoming
 
-This repo will be deprecated after a forthcoming (2018) publication by Tariq Desai and Aylwyn Scally
+This repo will be permanent, but deprecated after a forthcoming (2018) publication by Tariq Desai and Aylwyn Scally
