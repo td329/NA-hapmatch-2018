@@ -1,6 +1,6 @@
 ## Haplotype segment-matching analysis in Scheib et al. (2018)
 
-This repo collects scripts and output data used to generate figures for the haplotype segment-matching analysis in Scheib et al.  (2018). It also contains an outline of the derivation of some relevant quantities required for the likelihood analysis. 
+This repo collects scripts and output data used to generate figures for the haplotype segment-matching analysis in [Scheib et al.  (2018)](http://science.sciencemag.org/content/360/6392/1024). It also contains an outline of the derivation of some relevant quantities required for the likelihood analysis. 
 
 ### Scripts
 
